@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    
+    environment {
+        DOCKER_IMAGE = 'webgoatDockerhub'
+        DOCKER_USERNAME = 'rohitsaha0719'
+        DOCKER_PASSWORD = '7869945311'
+    }
+
+    stages {
+        stage('Clone Git Repo') {
+            steps {
+                git branch: 'main', url: 'https://github.com/WebGoat/WebGoat.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh '''
+                    docker build -t $DOCKER_IMAGE .
+                    '''
+                }
+            }
+        }
+
+        stage('Push to Docker Registry') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                        docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+                        docker push $DOCKER_IMAGE
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}
